@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <title>Chat with GPT</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #e5ddd5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%; /* Full width */
+            max-width: 800px; /* Increase maximum width */
+            height: 90vh; /* Increase height */
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #chat-history {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            width: 600px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: flex-end;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.gpt {
+            justify-content: flex-start;
+        }
+
+        .message .bubble {
+            max-width: 60%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            position: relative;
+            font-size: 14px;
+            white-space: pre-wrap; /* Ensures whitespace and newlines are preserved */
+        }
+
+        .message.user .bubble {
+            background-color: #dcf8c6;
+        }
+
+        .message.gpt .bubble {
+            background-color: #ffcc80; /* Changed to orange color */
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+
+        form {
+            display: flex;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+            display: block; /* Ensure the input is always displayed */
+        }
+
+        input[type="submit"] {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        #export-pdf {
+            margin-left: 10px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        #export-pdf:hover {
+            background-color: #218838;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<div class="chat-container">
+    <div id="chat-history"></div>
+    <form id="chat-form">
+        <input id="message" name="message" required type="text">
+        <input type="submit" value="➤">
+
+    </form>
+</div>
+<script>
+    const messages = [];  // 用于存放所有消息的数组
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const form = document.getElementById('chat-form');
+        const chatHistory = document.getElementById('chat-history');
+
+        const websocket = new WebSocket("ws://127.0.0.1:8088/ws/info");
+
+        websocket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            const messageId = data.messageId;
+            const content = data.content;
+
+            // 找到具有相同消息ID的消息
+            const existingMessage = messages.find(msg => msg.id === messageId);
+            if (existingMessage) {
+                existingMessage.content += content;
+                console.log('Updated message:', existingMessage); // 调试信息
+            } else {
+                console.log('Message not found:', messageId); // 调试信息
+            }
+
+            // 找到具有相同消息ID的<p>标签
+            const messageParagraph = document.querySelector(`p[data-id="${messageId}"]`);
+            if (messageParagraph) {
+                messageParagraph.innerHTML += content;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+        };
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('message').value;
+            const messageId = Date.now(); // 生成唯一的消息ID
+
+            // 创建用户消息
+            chatHistory.innerHTML += `<div class="message user"><div class="bubble">${marked.parse(message)}</div><img src="https://thirdwx.qlogo.cn/mmopen/vi_32/FmScxjqjfia7LezFGZpDA1kj3x5gF9XM8wu5bN4o3nSYCONr9wbaKB11fVpjbvBQwfFKtAWGuiaw8kw5Vibo3VNNtdicftZmy2OfxHF0kf57hxg/132" class="avatar"></div>`;
+
+            // 添加用户消息到消息数组
+            messages.push({"role": "user", "content": message, "id": Date.now()});
+            messages.push({"role": "assistant", "content": "", "id": messageId});
+
+            // 创建GPT消息气泡
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message', 'gpt');
+            messageBubble.innerHTML = `<img src="https://thirdwx.qlogo.cn/mmopen/vi_32/Ibp7XlY5N02bgsicpqqrqjZnAzSWib0u4kj2KbGdgObxMBXbYsV2oHJibjkk15mvtibxVx6Sz7bArsXPqed9J2d5OMNnLc3cUh6bgqTm8wT7t74/132" class="avatar"><div class="bubble"><p data-id="${messageId}"></p></div>`;
+            chatHistory.appendChild(messageBubble);
+
+            websocket.send(JSON.stringify({messages, messageId})); // 传递消息ID给后端
+
+            document.getElementById('message').value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            console.log('Messages array:', messages); // 调试信息
+        };
+    });
+</script>
+</body>
+</html>

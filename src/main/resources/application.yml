@@ -1,0 +1,139 @@
+erupt-app:
+  # 登录失败几次，需要验证码
+  verifyCodeCount: 2
+erupt:
+  # 是否开启csrf防御
+  csrfInspect: true
+  # 是否开启redis方式存储session，默认false，开启后需在配置文件中添加redis配置（同 spring boot）
+  redisSession: true
+  # 附件上传存储路径, 默认路径为：/opt/erupt-attachment
+  uploadPath: /erupt/attachment
+  # 是否保留上传文件原始名称
+  keepUploadFileName: false
+  # 登录session时长（redisSession为true时有效）
+  upms.expireTimeByLogin: 60
+  # 是否记录操作日志，默认true，该功能开启后可在【系统管理 → 操作日志】中查看操作日志
+  security.recordOperateLog: true
+
+
+
+
+
+
+spring:
+  redis:
+    # 11开发库 10生产
+    database: 14
+    timeout: 10000
+    host: 140.143.162.77
+    password: liu7418
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      username: root
+      password: liu7418
+      url: jdbc:mysql://140.143.162.77:3306/smart_service?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+      # 初始连接数
+      initialSize: 5
+      # 最小连接池数量
+      minIdle: 10
+      # 最大连接池数量
+      maxActive: 20
+      # 配置获取连接等待超时的时间
+      maxWait: 60000
+      # 配置连接超时时间
+      connectTimeout: 30000
+      # 配置网络超时时间
+      socketTimeout: 60000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      timeBetweenEvictionRunsMillis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      minEvictableIdleTimeMillis: 300000
+      # 配置一个连接在池中最大生存的时间，单位是毫秒
+      maxEvictableIdleTimeMillis: 900000
+      # 配置检测连接是否有效
+      validationQuery: SELECT 1
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      webStatFilter:
+        enabled: true
+      statViewServlet:
+        enabled: true
+        # 设置白名单，不填则允许所有访问
+        allow:
+        url-pattern: /druid/*
+        # 控制台管理用户名和密码
+        login-username: admin
+        login-password: 123456
+      filter:
+        stat:
+          enabled: true
+          # 慢SQL记录
+          log-slow-sql: true
+          slow-sql-millis: 1000
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: true
+  jpa:
+    show-sql: false
+    generate-ddl: true
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    database: mysql
+  profiles:
+    active: dev
+  mail:
+    username: xxxx@qq.com
+    password: xxxxxxx
+    host: smtp.qq.com
+    properties:
+      mail.smtp.ssl.auth: true
+      mail.smtp.ssl.enable: true
+      mail.smtp.ssl.required: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+server:
+  #  servlet:
+  #    context-path: /admin
+  # 启用 gzip 压缩
+  compression:
+    mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
+    enabled: true
+  error:
+    includeException: true
+    includeStacktrace: ALWAYS
+    includeMessage: ALWAYS
+  port: 8088
+
+
+# 配置MybatisPlus
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    #    将下划线映射为驼峰格式
+    map-underscore-to-camel-case: true
+    #    是否开启缓存
+    cache-enabled: true
+
+
+wx:
+  # 公众号配置
+  mp:
+    appid: wxb996dd627f30526c
+    secret: 42b57a1e94e4a4d7bebfd9775aae1161
+    token: Liuzinianl
+    aesKey: 7b7JhQO6NtMbRXHiMeA0nz7IZKA66btWF1ESb6VFENV
+
+tencentOss:
+  bucketName: tayiyou-1321603750
+  secretId: AKIDcceWCeu582sbCnGTSFpCOOCsPo9NUeje
+  secretKey: 50lI1Ws6JvMdsxoRwGYlrpgLr9NWmtrl
+  region: ap-chengdu
+  fileDomain: https://tayiyou-1321603750.cos.ap-chengdu.myqcloud.com
